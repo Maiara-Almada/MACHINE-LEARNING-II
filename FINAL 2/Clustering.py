@@ -236,43 +236,6 @@ def assign_som_clusters(weights, df, n_clusters, random_state=42):
     return labels, neuron_labels
 
 
-# --- 6. Compare all models ---
-def compare_models(df, labels_dict):
-
-    print("\n--- Model Comparison (Silhouette Scores) ---")
-    results = {}
-
-    for model_name, labels in labels_dict.items():
-        labels = np.asarray(labels)
-        if labels.shape[0] != df.shape[0]:
-            raise ValueError(
-                f"Label length mismatch for {model_name}: {labels.shape[0]} != {df.shape[0]}"
-            )
-
-        if -1 in labels:
-            mask = labels != -1
-        else:
-            mask = np.ones(len(labels), dtype=bool)
-
-        unique_labels = np.unique(labels[mask])
-        if mask.sum() < 2 or len(unique_labels) < 2:
-            print(f"{model_name}: Silhouette score not applicable (insufficient clusters or only noise).")
-            results[model_name] = np.nan
-            continue
-
-        score = silhouette_score(df[mask], labels[mask])
-        results[model_name] = score
-        print(f"{model_name}: {score:.4f}")
-
-    valid_results = {k: v for k, v in results.items() if not np.isnan(v)}
-    if valid_results:
-        best_model = max(valid_results, key=valid_results.get)
-        print(f"\nBest model: {best_model} with silhouette score {valid_results[best_model]:.4f}")
-    else:
-        print("\nBest model: None (no valid silhouette scores could be computed)")
-
-    return results
-
 # --- Mean Shift ---
 def fit_meanshift(df, bandwidth=None):
     """Fit a Mean Shift model and return labels."""
@@ -288,7 +251,7 @@ def plot_umap(df, labels, title="UMAP Projection", n_neighbors=15, min_dist=0.1,
     embedding = reducer.fit_transform(df)
     
     plt.figure(figsize=(8, 6))
-    scatter = plt.scatter(embedding[:, 0], embedding[:, 1], c=labels, cmap='tab10', s=10)
+    scatter = plt.scatter(embedding[:, 0], embedding[:, 1], c=labels, cmap='Paired', s=10)
     plt.title(title)
     plt.colorbar(scatter, label='Cluster')
     plt.xlabel('UMAP 1')
@@ -317,7 +280,7 @@ def plot_tsne(df, labels, title="t-SNE Projection", perplexity=30, random_state=
     embedding = tsne.fit_transform(data)
 
     plt.figure(figsize=(8, 6))
-    scatter = plt.scatter(embedding[:, 0], embedding[:, 1], c=labels, cmap='viridis', s=10)
+    scatter = plt.scatter(embedding[:, 0], embedding[:, 1], c=labels, cmap='Paired', s=10)
     plt.title(title)
     plt.colorbar(scatter, label='Cluster')
     plt.xlabel('t-SNE 1')
