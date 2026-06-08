@@ -87,7 +87,7 @@ def fit_hierarchical(df, n_clusters, method='ward'):
 
 
 # --- 4. DBSCAN ---
-def find_optimal_eps(df, n_neighbors=5):
+def find_optimal_eps(df, n_neighbors=5, y_max=10):
 
     neighbors = NearestNeighbors(n_neighbors=n_neighbors)
     neighbors.fit(df)
@@ -99,6 +99,10 @@ def find_optimal_eps(df, n_neighbors=5):
     plt.title('K-Distance Graph (find elbow for eps)')
     plt.xlabel('Points sorted by distance')
     plt.ylabel(f'{n_neighbors}-NN Distance')
+    
+    if y_max is not None:
+        plt.ylim(0, y_max)
+        
     plt.tight_layout()
     plt.show()
 
@@ -146,7 +150,7 @@ def _som_radius(initial_sigma, iteration, time_constant):
     return initial_sigma * np.exp(-iteration / time_constant)
 
 
-def plot_som_u_matrix(weights):
+def plot_som_u_matrix(weights, cmap='viridis'):
     """Plot the SOM U-Matrix showing average neighbor distances."""
     m, n, dim = weights.shape
     u_matrix = np.zeros((m, n))
@@ -167,7 +171,7 @@ def plot_som_u_matrix(weights):
                 u_matrix[i, j] = distances.mean()
 
     plt.figure(figsize=(8, 6))
-    plt.imshow(u_matrix, cmap='viridis', origin='lower')
+    plt.imshow(u_matrix, cmap=cmap, origin='lower')
     plt.colorbar(label='Average distance to neighbors')
     plt.title('SOM U-Matrix')
     plt.xlabel('Map x')
@@ -178,7 +182,7 @@ def plot_som_u_matrix(weights):
     return u_matrix
 
 
-def fit_som(df, map_shape=(10, 10), n_iterations=1000, learning_rate=0.5, sigma=None, random_state=42, plot_u_matrix=False):
+def fit_som(df, map_shape=(10, 10), n_iterations=1000, learning_rate=0.5, sigma=None, random_state=42, plot_u_matrix=False, cmap='viridis'):
     """Train a Self-Organizing Map and return BMU assignments for each sample."""
     data = df.values.astype(float)
 
@@ -207,7 +211,7 @@ def fit_som(df, map_shape=(10, 10), n_iterations=1000, learning_rate=0.5, sigma=
     labels = bmu_indices[:, 0] * map_shape[1] + bmu_indices[:, 1]
 
     if plot_u_matrix:
-        plot_som_u_matrix(weights)
+        plot_som_u_matrix(weights, cmap=cmap)
 
     print(f"Trained SOM with map shape {map_shape} and {n_iterations} iterations.")
     print(f"Unique BMU clusters: {len(np.unique(labels))}")
