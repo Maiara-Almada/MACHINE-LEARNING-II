@@ -237,12 +237,13 @@ def assign_som_clusters(weights, df, n_clusters, random_state=42):
 
 
 # --- Mean Shift ---
-def fit_meanshift(df, bandwidth=None):
+def fit_meanshift(df, bandwidth=None, bin_seeding=False):
     """Fit a Mean Shift model and return labels."""
-    meanshift = MeanShift(bandwidth=bandwidth)
+    meanshift = MeanShift(bandwidth=bandwidth, bin_seeding=bin_seeding)
     labels = meanshift.fit_predict(df)
     print(f"MeanShift found {len(np.unique(labels))} clusters.")
     return labels
+
 
 # --- UMAP ---
 def plot_umap(df, labels, title="UMAP Projection", n_neighbors=15, min_dist=0.1, random_state=42):
@@ -260,7 +261,7 @@ def plot_umap(df, labels, title="UMAP Projection", n_neighbors=15, min_dist=0.1,
     plt.show()
     return embedding
 
-
+#---TSNE--
 def plot_tsne(df, labels, title="t-SNE Projection", perplexity=30, random_state=42, max_iter=1000):
     """Reduce data to 2D using t-SNE and plot the cluster assignments.
 
