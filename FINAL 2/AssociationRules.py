@@ -3,12 +3,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 import json
 import warnings
+import os
+import ast
 from mlxtend.frequent_patterns import apriori, association_rules
 from mlxtend.preprocessing import TransactionEncoder
 
 
 
 warnings.filterwarnings('ignore')
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 CLUSTER_NAMES_MAP = {
     0: "The Plant-Based Household",
@@ -20,7 +24,7 @@ CLUSTER_NAMES_MAP = {
 }
 
 
-def load_and_prepare_data(basket_path='customer_basket (1).csv', clusters_path='dataset_clusters.csv'):
+def load_and_prepare_data(basket_path=os.path.join(SCRIPT_DIR, 'customer_basket (1).csv'), clusters_path=os.path.join(SCRIPT_DIR, 'dataset_clusters.csv')):
     basket = pd.read_csv(basket_path)
     clusters = pd.read_csv(clusters_path)
     clusters['cluster'] = clusters['cluster'].map(CLUSTER_NAMES_MAP)
@@ -28,7 +32,7 @@ def load_and_prepare_data(basket_path='customer_basket (1).csv', clusters_path='
 
 
 def convert_string_to_list(string):
-    return json.loads(string.replace("'", '"'))
+    return ast.literal_eval(string)
 
 
 def calculate_metric_range(rules_df, metric='lift'):
@@ -53,7 +57,7 @@ def plot_top_products(basket_list, title_suffix=""):
     plt.xticks(rotation=45, ha='right')
     plt.tight_layout()
     
-    filename = f"top_products_{title_suffix.lower().replace(' ', '_')}.png"
+    filename = os.path.join(SCRIPT_DIR, f"top_products_{title_suffix.lower().replace(' ', '_')}.png")
     plt.savefig(filename)
     plt.close()
 
@@ -71,7 +75,7 @@ def plot_association_results(rules_df, title_suffix=""):
     plt.grid(True, linestyle='--', alpha=0.5)
     plt.tight_layout()
     
-    filename = f"rules_scatter_{title_suffix.lower().replace(' ', '_')}.png"
+    filename = os.path.join(SCRIPT_DIR, f"rules_scatter_{title_suffix.lower().replace(' ', '_')}.png")
     plt.savefig(filename)
     plt.close()
 
@@ -99,8 +103,8 @@ def run_association_rules(basket_data, min_support=0.05, min_confidence=0.2, spl
 if __name__ == "__main__":
     try:
         df_basket_clusters = load_and_prepare_data(
-            basket_path='customer_basket (1).csv', 
-            clusters_path='dataset_clusters.csv'
+            basket_path=os.path.join(SCRIPT_DIR, 'customer_basket (1).csv'), 
+            clusters_path=os.path.join(SCRIPT_DIR, 'dataset_clusters.csv')
         )
         df_basket_clusters['list_of_goods_parsed'] = df_basket_clusters['list_of_goods'].apply(convert_string_to_list)
         
