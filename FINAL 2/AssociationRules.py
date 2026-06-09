@@ -1,4 +1,5 @@
 import pandas as pd
+# pyrefly: ignore [missing-import]
 import numpy as np
 import matplotlib.pyplot as plt
 import json
@@ -24,10 +25,21 @@ CLUSTER_NAMES_MAP = {
 }
 
 
-def load_and_prepare_data(basket_path=os.path.join(SCRIPT_DIR, 'customer_basket (1).csv'), clusters_path=os.path.join(SCRIPT_DIR, 'dataset_clusters.csv')):
+def load_and_prepare_data(basket_path=os.path.join(SCRIPT_DIR, 'customer_basket(1).csv'), clusters_path=os.path.join(SCRIPT_DIR, 'dataset_clusters.csv')):
     basket = pd.read_csv(basket_path)
     clusters = pd.read_csv(clusters_path)
-    clusters['cluster'] = clusters['cluster'].map(CLUSTER_NAMES_MAP)
+    
+    # Check if 'customer_id' is missing in clusters, which happens if it was exported from customer_info_engineered.csv
+    if 'customer_id' not in clusters.columns:
+        info_path = os.path.join(SCRIPT_DIR, 'customer_info.csv')
+        if os.path.exists(info_path):
+            customer_info = pd.read_csv(info_path, usecols=['customer_id'])
+            clusters['customer_id'] = customer_info['customer_id']
+            
+    # Map cluster numbers to names only if they are not already mapped
+    if clusters['cluster'].dropna().iloc[0] not in CLUSTER_NAMES_MAP.values():
+        clusters['cluster'] = clusters['cluster'].map(CLUSTER_NAMES_MAP)
+        
     return pd.merge(clusters, basket, on='customer_id', how='inner')
 
 
@@ -103,7 +115,7 @@ def run_association_rules(basket_data, min_support=0.05, min_confidence=0.2, spl
 if __name__ == "__main__":
     try:
         df_basket_clusters = load_and_prepare_data(
-            basket_path=os.path.join(SCRIPT_DIR, 'customer_basket (1).csv'), 
+            basket_path=os.path.join(SCRIPT_DIR, 'customer_basket(1).csv'), 
             clusters_path=os.path.join(SCRIPT_DIR, 'dataset_clusters.csv')
         )
         df_basket_clusters['list_of_goods_parsed'] = df_basket_clusters['list_of_goods'].apply(convert_string_to_list)
