@@ -16,10 +16,10 @@ warnings.filterwarnings('ignore')
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 CLUSTER_NAMES_MAP = {
-    0: "The Plant-Based Household",
+    0: "The Plant-Based Consumer",
     1: "The Family Budget Optimizer",
-    2: "The Promotion-Driven Pet Parent",
-    3: "The Demanding Premium Tech Consumer",
+    2: "The Demanding Premium Tech Consumer",
+    3: "The Early Morning Hygiene Consumer",
     4: "The Wellness Customer",
     5: "The Affluent Health-Conscious Buyer"
 }
@@ -29,7 +29,7 @@ def load_and_prepare_data(basket_path=os.path.join(SCRIPT_DIR, 'customer_basket(
     basket = pd.read_csv(basket_path)
     clusters = pd.read_csv(clusters_path)
     
-    # Check if 'customer_id' is missing in clusters, which happens if it was exported from customer_info_engineered.csv
+    # Check if 'customer_id' is missing in clusters
     if 'customer_id' not in clusters.columns:
         info_path = os.path.join(SCRIPT_DIR, 'customer_info.csv')
         if os.path.exists(info_path):
@@ -63,7 +63,7 @@ def plot_top_products(basket_list, title_suffix=""):
     top_items = df_trans.sum().sort_values(ascending=False).head(10)
     
     plt.figure(figsize=(10, 5))
-    top_items.plot(kind='bar', color='#5c6bc0', edgecolor='black')
+    top_items.plot(kind='bar', color='#ff7f00', edgecolor='black')
     plt.title(f'Top 10 Most Frequent Products - {title_suffix}', fontweight='bold')
     plt.ylabel('Absolute Frequency')
     plt.xticks(rotation=45, ha='right')
@@ -79,8 +79,7 @@ def plot_association_results(rules_df, title_suffix=""):
         return
     plt.figure(figsize=(8, 5))
     scatter = plt.scatter(rules_df['support'], rules_df['confidence'], 
-                          c=rules_df['lift'], cmap='viridis', alpha=0.6)
-    plt.colorbar(scatter, label='Lift')
+                          color='#ff7f00', alpha=0.6)
     plt.title(f'Rules Scatter Plot (Support vs Confidence) - {title_suffix}', fontweight='bold')
     plt.xlabel('Support')
     plt.ylabel('Confidence')
@@ -92,7 +91,7 @@ def plot_association_results(rules_df, title_suffix=""):
     plt.close()
 
 
-def run_association_rules(basket_data, min_support=0.05, min_confidence=0.2, split_train=True):
+def run_association_rules(basket_data, min_support=0.005, min_confidence=0.05, split_train=True):
     if split_train:
         train_size = int(len(basket_data) * 0.8)
         data_to_model = basket_data[:train_size]
@@ -145,15 +144,15 @@ if __name__ == "__main__":
             return df_cool
 
         
-        # PART 1: GLOBAL RULES (ALL CUSTOMERS)
+        # PART 1: Global Association Rules Analysis (All Customers Combined)
 
         print("\n" + "="*80)
-        print("=== PART 1: GLOBAL ASSOCIATION RULES (ALL CUSTOMERS COMBINED) ===")
+        print("Global Association Rules Analysis (All Customers Combined)")
         print("="*80)
         all_baskets = df_basket_clusters['list_of_goods_parsed'].tolist()
         plot_top_products(all_baskets, "Global Dataset")
         
-        items_all, rules_all = run_association_rules(all_baskets, min_support=0.02, min_confidence=0.15, split_train=True)
+        items_all, rules_all = run_association_rules(all_baskets, min_support=0.005, min_confidence=0.05, split_train=True)
         
         print(f"\n-> [Global] Frequent Itemsets (Top 10):")
         print((clean_items_df(items_all.head(10))))
@@ -167,14 +166,14 @@ if __name__ == "__main__":
         else:
             print("No rules generated globally for the current threshold limits.")
 
-        # PART 2: STANDARDIZED ANALYSIS PER CLUSTER (AUTOMATED LOOP)
+        # PART 2: Association Rules Analysis by Cluster 
 
         print("\n" + "="*80)
-        print("=== PART 2: STANDARDIZED ASSOCIATION RULES ANALYSIS BY CLUSTER COEFFICIENT ===")
+        print("=== PART 2: ASSOCIATION RULES ANALYSIS BY CLUSTER ===")
         print("="*80)
         
-        DEFAULT_SUPPORT = 0.02
-        DEFAULT_CONFIDENCE = 0.15
+        DEFAULT_SUPPORT = 0.005
+        DEFAULT_CONFIDENCE = 0.05
         
         for cluster_id, cluster_name in CLUSTER_NAMES_MAP.items():
             print("\n" + "-"*60)
@@ -196,6 +195,20 @@ if __name__ == "__main__":
                     split_train=True
                 )
                 
+                # Auto-adjust thresholds if no rules are found for this cluster
+                curr_supp = DEFAULT_SUPPORT
+                curr_conf = DEFAULT_CONFIDENCE
+                while rules_cl.empty and curr_supp > 0.001 and curr_conf > 0.01:
+                    curr_supp = round(curr_supp - 0.001, 4)
+                    curr_conf = round(curr_conf - 0.01, 4)
+                    
+                    items_cl, rules_cl = run_association_rules(
+                        cluster_baskets, 
+                        min_support=curr_supp, 
+                        min_confidence=curr_conf, 
+                        split_train=True
+                    )
+                
                 print(f"\n   -> Frequent Itemsets Found (Top 10 Sample out of {len(items_cl)}):")
                 if not items_cl.empty:
                     print(clean_items_df(items_cl.head(10)))
@@ -215,7 +228,7 @@ if __name__ == "__main__":
                 print(f"   -> Alert: No records found in the dataset for this cluster.")
 
         print("\n" + "="*80)
-        print("=== DATA PROCESSING COMPLETED SUCCESSFULLY ===")
+        print("Data Processing and Association Rules Analysis Completed Successfully!")
         print("="*80)
 
     except Exception as e:
