@@ -25,7 +25,7 @@ CLUSTER_NAMES_MAP = {
 }
 
 
-def load_and_prepare_data(basket_path=os.path.join(SCRIPT_DIR, 'customer_basket(1).csv'), clusters_path=os.path.join(SCRIPT_DIR, 'dataset_clusters.csv')):
+def load_and_prepare_data(basket_path=os.path.join(SCRIPT_DIR, 'customer_basket.csv'), clusters_path=os.path.join(SCRIPT_DIR, 'dataset_clusters.csv')):
     basket = pd.read_csv(basket_path)
     clusters = pd.read_csv(clusters_path)
     
@@ -114,7 +114,7 @@ def run_association_rules(basket_data, min_support=0.005, min_confidence=0.05, s
 if __name__ == "__main__":
     try:
         df_basket_clusters = load_and_prepare_data(
-            basket_path=os.path.join(SCRIPT_DIR, 'customer_basket(1).csv'), 
+            basket_path=os.path.join(SCRIPT_DIR, 'customer_basket.csv'), 
             clusters_path=os.path.join(SCRIPT_DIR, 'dataset_clusters.csv')
         )
         df_basket_clusters['list_of_goods_parsed'] = df_basket_clusters['list_of_goods'].apply(convert_string_to_list)
