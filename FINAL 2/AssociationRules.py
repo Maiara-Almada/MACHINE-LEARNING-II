@@ -111,6 +111,28 @@ def run_association_rules(basket_data, min_support=0.005, min_confidence=0.05, s
     return frequent_itemsets, rules
 
 
+def clean_rules_df(df_rules):
+    if df_rules.empty:
+        return df_rules
+    df_cool = df_rules.copy()
+    df_cool['antecedents'] = df_cool['antecedents'].apply(lambda x: f"[{', '.join(list(x))}]")
+    df_cool['consequents'] = df_cool['consequents'].apply(lambda x: f"[{', '.join(list(x))}]")
+    metrics = ['support', 'confidence', 'lift', 'leverage', 'conviction', 'zhangs_metric']
+    for m in metrics:
+        if m in df_cool.columns:
+            df_cool[m] = df_cool[m].round(4)
+    return df_cool
+
+
+def clean_items_df(df_items):
+    if df_items.empty:
+        return df_items
+    df_cool = df_items.copy()
+    df_cool['itemsets'] = df_cool['itemsets'].apply(lambda x: f"[{', '.join(list(x))}]")
+    df_cool['support'] = df_cool['support'].round(4)
+    return df_cool
+
+
 if __name__ == "__main__":
     try:
         df_basket_clusters = load_and_prepare_data(
@@ -123,27 +145,6 @@ if __name__ == "__main__":
         pd.set_option('display.width', 1000)
         pd.set_option('display.max_colwidth', None)
 
-        def clean_rules_df(df_rules):
-            if df_rules.empty:
-                return df_rules
-            df_cool = df_rules.copy()
-            df_cool['antecedents'] = df_cool['antecedents'].apply(lambda x: f"[{', '.join(list(x))}]")
-            df_cool['consequents'] = df_cool['consequents'].apply(lambda x: f"[{', '.join(list(x))}]")
-            metrics = ['support', 'confidence', 'lift', 'leverage', 'conviction', 'zhangs_metric']
-            for m in metrics:
-                if m in df_cool.columns:
-                    df_cool[m] = df_cool[m].round(4)
-            return df_cool
-
-        def clean_items_df(df_items):
-            if df_items.empty:
-                return df_items
-            df_cool = df_items.copy()
-            df_cool['itemsets'] = df_cool['itemsets'].apply(lambda x: f"[{', '.join(list(x))}]")
-            df_cool['support'] = df_cool['support'].round(4)
-            return df_cool
-
-        
         # PART 1: Global Association Rules Analysis (All Customers Combined)
 
         print("\n" + "="*80)
